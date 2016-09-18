@@ -4,7 +4,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 import System.FilePath
-import System.Directory (doesFileExist, renameFile, getModificationTime)
+import System.Directory (renameFile, getModificationTime)
 import System.IO.Error
 import Options.Applicative
 import Control.Monad
@@ -13,14 +13,10 @@ import Graphics.HsExif
 import Text.Printf
 import Data.Time
 import Data.String.Utils
-import Control.Exception
-import Data.Char (toLower)
-import Data.Time.Format
 import Data.List (groupBy, find, sort, intercalate, sortBy)
 import Data.Maybe (maybe, isJust, fromJust)
-import Data.Char (isDigit)
+import Data.Char (isDigit, toLower)
 import System.Posix.Files (getFileStatus)
-import Control.Error
 import Control.Monad.Trans.Either
 import qualified Data.Vector as V
 import qualified Data.ByteString.Lazy as BL
