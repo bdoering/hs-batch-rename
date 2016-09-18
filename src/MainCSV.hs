@@ -21,6 +21,7 @@ import Data.Maybe (maybe, isJust, fromJust)
 import Data.Char (isDigit)
 import System.Posix.Files (getFileStatus)
 import Control.Error
+import Control.Monad.Trans.Either
 import qualified Data.Vector as V
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Csv as Csv
@@ -46,7 +47,7 @@ data ImageGroup = ImageGroup { basename :: String -- ^Filename with path, withou
 instance Eq ImageGroup where
   (==) (ImageGroup b1 _ _) (ImageGroup b2 _ _) = b1 == b2
 
--- Firts order by EXIF date, and if not available, then by
+-- First order by EXIF date, and if not available, then by
 -- modification date (first in list)
 instance Ord ImageGroup where
   compare x y = compare (groupDateTime x) (groupDateTime y)
