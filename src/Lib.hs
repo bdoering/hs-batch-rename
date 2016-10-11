@@ -2,6 +2,7 @@
 
 module Lib
        ( readImageGroups
+       , renameAll
        ) where
 
 import Data.Char (isDigit, toLower)
@@ -61,6 +62,7 @@ group = map mkImageGroup . groupBy (fOnBasename (==)) . sortBy (fOnBasename comp
     fOnBasename f (Image _ _ f1) (Image _ _ f2) = f (takeBaseName f1) (takeBaseName f2)
     mkImageGroup i@((Image _ _ f):xs) = ImageGroup (dropExtension f) (imagesDateTime i) i
 
+-- Rename all files within an ImageGroup (same images with different extensions)
 renameAll :: Bool -> String -> ImageGroup -> Int -> IO ()
 renameAll dryRun basename g n = mapM_ (rename (groupDateTime g)) (images g) 
   where rename gd (Image _ _ p) = do
@@ -75,9 +77,9 @@ renameAll dryRun basename g n = mapM_ (rename (groupDateTime g)) (images g)
           case res of
             Left e -> putStrLn $ "*** Caught exception for " ++ p ++ " : " ++
                       show e ++ " (skipping)"
-            Right _ -> putStrLn $ concat [
-              if dirLen > 20 then ".." ++ drop (dirLen - 20) dir else dir, ": ",
-              takeFileName p, " --> ", takeFileName newFn]
+            Right _ -> putStrLn $
+                       concat [ if dirLen > 20 then ".." ++ drop (dirLen - 20) dir else dir, ": ",
+                                takeFileName p, " --> ", takeFileName newFn]
 
 newBasename :: [String] -- ^ Previous basename components (assume no empty fields)
             -> [String] -- ^ These basename components
@@ -89,12 +91,6 @@ newBasename _ ys = ys
 newBasenames _ [] = []
 newBasenames x (y:ys) = new : newBasenames new ys
   where new = newBasename x y
-
-doRename :: Bool -> M.Map String String -> Int -> ImageGroup -> IO ()
-doRename dryRun nameMap n group = do
-  case M.lookup (basename group) nameMap of
-    Nothing -> putStrLn $ "*** No name for group: " ++ basename group
-    Just bn -> renameAll dryRun bn group n
 
 moreThanOne [] = False
 moreThanOne (x:[]) = False
