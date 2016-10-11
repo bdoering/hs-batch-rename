@@ -19,7 +19,6 @@ import qualified Data.Map.Strict as M
 
 import Types
 
-
 imagesDateTime :: [Image] -> LocalTime
 imagesDateTime xs = case (find (isJust . exifDateTime) xs) of
         Nothing -> (modificationDateTime . head $ xs)
@@ -63,12 +62,15 @@ group = map mkImageGroup . groupBy (fOnBasename (==)) . sortBy (fOnBasename comp
     mkImageGroup i@((Image _ _ f):xs) = ImageGroup (dropExtension f) (imagesDateTime i) i
 
 -- Rename all files within an ImageGroup (same images with different extensions)
-renameAll :: Bool -> String -> ImageGroup -> Int -> IO ()
-renameAll dryRun basename g n = mapM_ (rename (groupDateTime g)) (images g) 
+renameAll :: Bool -> Bool -> String -> ImageGroup -> Int -> IO ()
+renameAll nodate dryRun basename g n = mapM_ (rename (groupDateTime g)) (images g) 
   where rename gd (Image _ _ p) = do
           let (bn, ext) = splitExtension p
               dir = takeDirectory bn
-              newFn = dir </> printf "%s_%03d_%s" (show.localDay$gd) n basename <.> map toLower ext
+              newBn = if nodate
+                      then printf "%s_%03d" basename n
+                      else printf "%s_%03d_%s" (show . localDay $ gd) n basename
+              newFn = dir </> newBn <.> map toLower ext
               dirLen = length dir
           res <- if dryRun
                  then return (Right ())

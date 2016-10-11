@@ -32,9 +32,6 @@ parseOptions = Options
 run :: Options -> IO ()
 run (Options cn fs nodate dryRun) = do
   e <- runEitherT $ do
-    -- imageFiles <- lift $ readImages fs
-
-    -- lift $ mapM print imageFiles
 
     -- Generate one ImageGroup per day; each image group contains files with the same basename
     imageGroups <- lift $ readImageGroups fs
@@ -43,31 +40,15 @@ run (Options cn fs nodate dryRun) = do
                              , " images (from "
                              , show (length imageGroups)
                              , " different days)" ]
-
-    let numberedImageGroups = map (\g -> zip [1..] g) imageGroups :: [[(Int,ImageGroup)]]    
-    -- lift $ mapM_ (\(n,g) -> doRename dryRun nameMap n g) $ concat numberedImageGroups
-    lift $ mapM_ (\(n,g) -> renameAll dryRun cn g n) $ concat numberedImageGroups
-                            
-                            -- let cleaned = map ((map prepareCell) . V.toList) $ V.toList csv
-      --       (c:csvBasenames) = map (drop 2) cleaned
-      --       -- basenames = c : (zipWith newBasename (c:csvBasenames) csvBasenames )
-      --       basenames = map (intercalate "_" . filter (/= "") . map (replace " " "-")) $ c : newBasenames c csvBasenames
-      --       nameMap = M.fromList $ zip (map head cleaned) basenames
-      --       numberedImageGroups = map (\g -> zip [1..] g) imageGroups :: [[(Int,ImageGroup)]]
-      --   lift $ mapM_ (\(n,g) -> doRename dryRun nameMap n g) $ concat numberedImageGroups
-          
-      
+    -- If date info shall not be exploited, simply concat all day
+    -- groups again. This is not the most efficient approach...
+    let numberedImageGroups = if nodate
+                              then zip [1..] (concat imageGroups)
+                              else concat( map (\g -> zip [1..] g) imageGroups)
+    lift $ mapM_ (\(n,g) -> renameAll nodate dryRun cn g n) numberedImageGroups
   case e of
     Left a -> putStrLn "Terminated prematurely"
-    Right b -> putStrLn "Finished the whole thing"
-
--- doRename :: Bool -> M.Map String String -> Int -> ImageGroup -> IO ()
--- doRename dryRun nameMap n group = do
---   case M.lookup (basename group) nameMap of
---     Nothing -> putStrLn $ "*** No name for group: " ++ basename group
---     Just bn -> renameAll dryRun bn group n
-
-
+    Right b -> return ()
 
 main = execParser opts >>= run
     where
